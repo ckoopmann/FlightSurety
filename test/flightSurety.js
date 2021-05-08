@@ -158,10 +158,10 @@ contract("Flight Surety Tests", async (accounts) => {
   it("After the 4th airline a single airline cannot register a new peer", async () => {
     // ARRANGe
     let numAirlines = await config.flightSuretyData.getNumAirlines.call();
-    assert.isAbove(
+    assert.equal(
       numAirlines.toNumber(),
-      3,
-      "At least 4 airlines need to be registered for this test"
+      4,
+      "4 airlines need to be registered for this test"
     );
     let registeringAirline = accounts[numAirlines];
     let newAirline = accounts[numAirlines + 1];
@@ -170,8 +170,6 @@ contract("Flight Surety Tests", async (accounts) => {
       value: 10,
     });
 
-    let events = config.flightSuretyApp.allEvents((error, event) => console.log("Event", error, event));
-
     // Act
     await config.flightSuretyApp.registerAirline(newAirline, {
       from: registeringAirline,
@@ -179,7 +177,15 @@ contract("Flight Surety Tests", async (accounts) => {
 
     let result = await config.flightSuretyData.isRegistered.call(newAirline);
     let numAirlinesAfter = await config.flightSuretyData.getNumAirlines.call();
+    let voteEvents = await config.flightSuretyApp.getPastEvents(
+      "VotedForFunctionCall"
+    );
     // ASSERT
+    assert.equal(
+      voteEvents.length,
+      1,
+      "One vote for function call event should be emitted"
+    );
     assert.equal(
       result,
       false,
@@ -189,6 +195,39 @@ contract("Flight Surety Tests", async (accounts) => {
       numAirlines.toNumber(),
       numAirlinesAfter.toNumber(),
       "Number airlines should not change "
+    );
+  });
+
+  it("3 Votes are enough to register the 5th airline", async () => {
+    // ARRANGe
+    let numAirlines = await config.flightSuretyData.getNumAirlines.call();
+    assert.equal(
+      numAirlines.toNumber(),
+      4,
+      "4 airlines need to be registered for this test"
+    );
+
+    let newAirline = accounts[numAirlines + 1];
+    for (const registeringAirline of accounts.slice(1, 3)) {
+      // Act
+      await config.flightSuretyApp.registerAirline(newAirline, {
+        from: registeringAirline,
+      });
+    }
+
+
+    let result = await config.flightSuretyData.isRegistered.call(newAirline);
+    let numAirlinesAfter = await config.flightSuretyData.getNumAirlines.call();
+    // ASSERT
+    assert.equal(
+      result,
+      true,
+      "With 3 votes new airline should be registered"
+    );
+    assert.equal(
+      numAirlines.toNumber() + 1,
+      numAirlinesAfter.toNumber(),
+      "Number airlines should have increased by 1"
     );
   });
 });

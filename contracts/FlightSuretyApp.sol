@@ -46,6 +46,8 @@ contract FlightSuretyApp {
  
     // Events
     event VotedForFunctionCall(address caller, string functionName, bytes32 argumentHash, uint256 voteCount, uint256 threshold);
+    event ResetVotesForFunctionCall(string functionName, bytes32 argumentHash);
+    event AirlineRegistered(address airline);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -95,6 +97,11 @@ contract FlightSuretyApp {
             consensusTracker.voteCount = consensusTracker.voteCount.add(1);
             uint256 threshold = numAirlines / 2;
             emit VotedForFunctionCall(msg.sender, functionName, argumentHash, consensusTracker.voteCount, threshold);
+            if(consensusTracker.voteCount > threshold){
+                _;
+                delete consensusTrackers[functionName][argumentHash];
+                emit ResetVotesForFunctionCall(functionName, argumentHash);
+            }
         }
     }
 
@@ -153,7 +160,9 @@ contract FlightSuretyApp {
                             conditionalMultipartyConsensus(4, "registerAirline", keccak256(newAirline))
                             returns(bool success, uint256 votes)
     {
+        require(!dataContract.isRegistered(newAirline), "New Airline is already registered");
         dataContract.registerAirline(newAirline);
+        emit AirlineRegistered(newAirline);
         success = true;
         return (success, 0);
     }
