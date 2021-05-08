@@ -12,6 +12,7 @@ contract FlightSuretyData {
     struct Airline {
         bool isRegistered;                              
         bool isFunded;
+        bool isQueued;
     }
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
@@ -120,7 +121,8 @@ contract FlightSuretyData {
                             external
                             requireAuthorizedCaller
     {
-        airlines[newAirline].isRegistered = true;
+        require(!airlines[newAirline].isQueued, "Airline is already queued for registration");
+        airlines[newAirline].isQueued = true;
 
     }
 

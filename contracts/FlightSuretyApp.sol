@@ -23,6 +23,7 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
     uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
+    uint8 private constant MINIMUM_FUNDING = 10;
 
     address private contractOwner;          // Account used to deploy contract
 
@@ -98,6 +99,11 @@ contract FlightSuretyApp {
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
+
+    function fundAirline (address airlineToFund) external payable {
+        require(msg.value >= MINIMUM_FUNDING, "Insufficient Funds");
+        dataContract.fundAirline.value(msg.value)(airlineToFund);
+    }
 
   
    /**
