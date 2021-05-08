@@ -181,11 +181,11 @@ contract("Flight Surety Tests", async (accounts) => {
     assert.equal(
       result,
       false,
-      "Airline should not be able to register another airline if it hasn't provided funding"
+      "Airline should not be able to register another airline after the 4th airline"
     );
     assert.equal(
-      numAirlines,
-      numAirlinesAfter,
+      numAirlines.toNumber(),
+      numAirlinesAfter.toNumber(),
       "Number airlines should not change "
     );
   });

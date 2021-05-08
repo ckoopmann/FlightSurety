@@ -72,6 +72,15 @@ contract FlightSuretyApp {
         _;
     }
 
+    modifier conditionalMultipartyConsensus(uint256 minAirlinesForConsensus)
+    {
+        require(dataContract.isFunded(msg.sender), "Caller is not a funded Airline");
+        if(dataContract.getNumAirlines() < minAirlinesForConsensus){
+            _;
+        }
+    }
+
+
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -123,6 +132,7 @@ contract FlightSuretyApp {
                             )
                             external
                             requireFundedAirline
+                            conditionalMultipartyConsensus(4)
                             returns(bool success, uint256 votes)
     {
         dataContract.registerAirline(newAirline);
@@ -361,4 +371,5 @@ contract FlightSuretyData {
     function fundAirline (address newAirline) external payable;
     function isRegistered ( address airlineAddress) view external returns(bool);
     function isFunded ( address airlineAddress) view external returns(bool);
+    function getNumAirlines() view external returns(uint256);
 }
