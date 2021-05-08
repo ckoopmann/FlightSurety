@@ -75,18 +75,20 @@ contract('Flight Surety Tests', async (accounts) => {
     
     // ARRANGE
     let newAirline = accounts[2];
+    let transActionFailed = false;
 
     // ACT
-    try {
-        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+    try{
+      await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
     }
-    catch(e) {
-
+    catch {
+      transActionFailed = true;
     }
     let result = await config.flightSuretyData.isRegistered.call(newAirline); 
 
     // ASSERT
     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
+    assert.equal(transActionFailed, true, "Transaction should fail when trying to register from an unfunded airline");
 
   });
 
@@ -97,13 +99,9 @@ contract('Flight Surety Tests', async (accounts) => {
 
 
     // ACT
-    config.flightSuretyApp.fundAirline(config.firstAirline, {from: config.firstAirline, value: 10})
-    try {
-        await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
-    }
-    catch(e) {
+    await config.flightSuretyApp.fundAirline(config.firstAirline, {from: config.firstAirline, value: 10})
+    await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
 
-    }
     let result = await config.flightSuretyData.isRegistered.call(newAirline); 
 
     // ASSERT

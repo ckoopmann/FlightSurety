@@ -30,10 +30,12 @@ contract FlightSuretyData {
     */
     constructor
                                 (
+                                    address firstAirline
                                 ) 
                                 public 
     {
         contractOwner = msg.sender;
+        _registerAirline(firstAirline);
     }
 
     /********************************************************************************************/
@@ -121,9 +123,18 @@ contract FlightSuretyData {
                             external
                             requireAuthorizedCaller
     {
-        require(!airlines[newAirline].isQueued, "Airline is already queued for registration");
-        airlines[newAirline].isQueued = true;
+        require(!airlines[newAirline].isRegistered, "Airline is already registered");
+        _registerAirline(newAirline);
 
+    }
+
+    function _registerAirline
+                            (   
+                             address newAirline
+                            )
+                            internal
+    {
+        airlines[newAirline].isRegistered = true;
     }
 
     function fundAirline

@@ -66,6 +66,12 @@ contract FlightSuretyApp {
         _;
     }
 
+    modifier requireFundedAirline()
+    {
+        require(dataContract.isFunded(msg.sender), "Caller is not a funded Airline");
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       CONSTRUCTOR                                        */
     /********************************************************************************************/
@@ -102,6 +108,7 @@ contract FlightSuretyApp {
 
     function fundAirline (address airlineToFund) external payable {
         require(msg.value >= MINIMUM_FUNDING, "Insufficient Funds");
+        require(dataContract.isRegistered(airlineToFund), "Airline needs to be registered before being able to be funded");
         dataContract.fundAirline.value(msg.value)(airlineToFund);
     }
 
@@ -112,11 +119,14 @@ contract FlightSuretyApp {
     */   
     function registerAirline
                             (   
+                             address newAirline
                             )
                             external
-                            pure
+                            requireFundedAirline
                             returns(bool success, uint256 votes)
     {
+        dataContract.registerAirline(newAirline);
+        success = true;
         return (success, 0);
     }
 
