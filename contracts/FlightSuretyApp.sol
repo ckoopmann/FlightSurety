@@ -34,10 +34,19 @@ contract FlightSuretyApp {
         address airline;
     }
     mapping(bytes32 => Flight) private flights;
+    struct ConsensusTracker {
+        mapping(address => bool) votedAddresses;
+        uint256 voteCount;
+    }
+    mapping(string => mapping(bytes32 => ConsensusTracker)) consensusTrackers;
+    
 
     FlightSuretyData dataContract;
 
  
+    // Events
+    event VotedForFunctionCall(address caller, string functionName, bytes32 argumentHash, uint256 voteCount, uint256 threshold);
+
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
@@ -72,11 +81,20 @@ contract FlightSuretyApp {
         _;
     }
 
-    modifier conditionalMultipartyConsensus(uint256 minAirlinesForConsensus)
+    modifier conditionalMultipartyConsensus(uint256 minAirlinesForConsensus, string functionName, bytes32 argumentHash)
     {
-        require(dataContract.isFunded(msg.sender), "Caller is not a funded Airline");
-        if(dataContract.getNumAirlines() < minAirlinesForConsensus){
+        uint256 numAirlines = dataContract.getNumAirlines();
+        if(numAirlines < minAirlinesForConsensus){
             _;
+        }
+        else {
+            ConsensusTracker consensusTracker = consensusTrackers[functionName][argumentHash];
+            require(!consensusTracker.votedAddresses[msg.sender], "Caller has already voted for this action");
+
+            consensusTracker.votedAddresses[msg.sender] = true;
+            consensusTracker.voteCount = consensusTracker.voteCount.add(1);
+            uint256 threshold = numAirlines / 2;
+            emit VotedForFunctionCall(msg.sender, functionName, argumentHash, consensusTracker.voteCount, threshold);
         }
     }
 
@@ -132,7 +150,7 @@ contract FlightSuretyApp {
                             )
                             external
                             requireFundedAirline
-                            conditionalMultipartyConsensus(4)
+                            conditionalMultipartyConsensus(4, "registerAirline", keccak256(newAirline))
                             returns(bool success, uint256 votes)
     {
         dataContract.registerAirline(newAirline);

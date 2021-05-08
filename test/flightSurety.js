@@ -170,6 +170,8 @@ contract("Flight Surety Tests", async (accounts) => {
       value: 10,
     });
 
+    let events = config.flightSuretyApp.allEvents((error, event) => console.log("Event", error, event));
+
     // Act
     await config.flightSuretyApp.registerAirline(newAirline, {
       from: registeringAirline,
