@@ -9,9 +9,14 @@ contract FlightSuretyData {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
+    struct Airline {
+        bool isRegistered;                              
+        bool isFunded;
+    }
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
     mapping(address=>bool) authorizedCallers;
+    mapping(address=>Airline) airlines;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -57,6 +62,11 @@ contract FlightSuretyData {
         _;
     }
 
+    modifier requireAuthorizedCaller()
+    {
+        require(authorizedCallers[msg.sender], "Caller is not auhtorized");
+        _;
+    }
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -105,10 +115,49 @@ contract FlightSuretyData {
     */   
     function registerAirline
                             (   
+                             address newAirline
                             )
                             external
-                            pure
+                            requireAuthorizedCaller
     {
+        airlines[newAirline].isRegistered = true;
+
+    }
+
+    function fundAirline
+                            (   
+                             address newAirline
+                            )
+                            external
+                            payable
+                            requireAuthorizedCaller
+    {
+        airlines[newAirline].isFunded = true;
+    }
+
+
+    function isRegistered
+                        (
+                            address airlineAddress
+                        )
+                        view
+                        external
+                        returns(bool) 
+    {
+        Airline airline = airlines[airlineAddress];
+        return airline.isRegistered;
+    }
+
+    function isFunded
+                        (
+                            address airlineAddress
+                        )
+                        view
+                        external
+                        returns(bool) 
+    {
+        Airline airline = airlines[airlineAddress];
+        return airline.isFunded;
     }
 
 
@@ -185,6 +234,12 @@ contract FlightSuretyData {
     {
         fund();
     }
+    
+
+    
+
+
+    
 
 
 }
