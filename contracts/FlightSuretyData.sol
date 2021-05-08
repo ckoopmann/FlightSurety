@@ -18,6 +18,7 @@ contract FlightSuretyData {
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
     mapping(address=>bool) authorizedCallers;
     mapping(address=>Airline) airlines;
+    uint256 numAirlines;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -35,6 +36,7 @@ contract FlightSuretyData {
                                 public 
     {
         contractOwner = msg.sender;
+        numAirlines = 0;
         _registerAirline(firstAirline);
     }
 
@@ -135,6 +137,7 @@ contract FlightSuretyData {
                             internal
     {
         airlines[newAirline].isRegistered = true;
+        numAirlines = numAirlines.add(1);
     }
 
     function fundAirline
@@ -146,6 +149,10 @@ contract FlightSuretyData {
                             requireAuthorizedCaller
     {
         airlines[newAirline].isFunded = true;
+    }
+
+    function getNumAirlines() view external returns(uint256){
+        return numAirlines;
     }
 
 
