@@ -145,7 +145,7 @@ contract("Flight Surety Tests", async (accounts) => {
       assert.equal(
         result,
         true,
-        "Airline should not be able to register another airline if it hasn't provided funding"
+        "Airline should be able register the next airline"
       );
       assert.equal(
         numAirlines,
@@ -153,5 +153,40 @@ contract("Flight Surety Tests", async (accounts) => {
         "Number airlines updated after successfull registration of second airline"
       );
     }
+  });
+
+  it("After the 4th airline a single airline cannot register a new peer", async () => {
+    // ARRANGe
+    let numAirlines = await config.flightSuretyData.getNumAirlines.call();
+    assert.isAbove(
+      numAirlines.toNumber(),
+      3,
+      "At least 4 airlines need to be registered for this test"
+    );
+    let registeringAirline = accounts[numAirlines];
+    let newAirline = accounts[numAirlines + 1];
+    await config.flightSuretyApp.fundAirline(registeringAirline, {
+      from: registeringAirline,
+      value: 10,
+    });
+
+    // Act
+    await config.flightSuretyApp.registerAirline(newAirline, {
+      from: registeringAirline,
+    });
+
+    let result = await config.flightSuretyData.isRegistered.call(newAirline);
+    let numAirlinesAfter = await config.flightSuretyData.getNumAirlines.call();
+    // ASSERT
+    assert.equal(
+      result,
+      false,
+      "Airline should not be able to register another airline if it hasn't provided funding"
+    );
+    assert.equal(
+      numAirlines,
+      numAirlinesAfter,
+      "Number airlines should not change "
+    );
   });
 });
