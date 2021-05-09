@@ -23,7 +23,7 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
     uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
-    uint8 private constant MINIMUM_FUNDING = 10;
+    uint256 private constant MINIMUM_FUNDING = 10 ether;
 
     address private contractOwner;          // Account used to deploy contract
 
@@ -47,7 +47,7 @@ contract FlightSuretyApp {
     // Events
     event VotedForFunctionCall(address caller, string functionName, bytes32 argumentHash, uint256 voteCount, uint256 threshold);
     event ResetVotesForFunctionCall(string functionName, bytes32 argumentHash);
-    event AirlineRegistered(address airline);
+    event AirlineRegistered(address airlineAddress, string airlineName);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -153,16 +153,17 @@ contract FlightSuretyApp {
     */   
     function registerAirline
                             (   
-                             address newAirline
+                                address airlineAddress,
+                                string airlineName
                             )
                             external
                             requireFundedAirline
-                            conditionalMultipartyConsensus(4, "registerAirline", keccak256(newAirline))
+                            conditionalMultipartyConsensus(4, "registerAirline", keccak256(airlineAddress, airlineName))
                             returns(bool success, uint256 votes)
     {
-        require(!dataContract.isRegistered(newAirline), "New Airline is already registered");
-        dataContract.registerAirline(newAirline);
-        emit AirlineRegistered(newAirline);
+        require(!dataContract.isRegistered(airlineAddress), "New Airline is already registered");
+        dataContract.registerAirline(airlineAddress, airlineName);
+        emit AirlineRegistered(airlineAddress, airlineName);
         success = true;
         return (success, 0);
     }
@@ -393,8 +394,8 @@ contract FlightSuretyApp {
 }   
 
 contract FlightSuretyData {
-    function registerAirline (address newAirline) external;
-    function fundAirline (address newAirline) external payable;
+    function registerAirline (address airlineAddress, string airlineName) external;
+    function fundAirline ( address airlineAddress) external payable;
     function isRegistered ( address airlineAddress) view external returns(bool);
     function isFunded ( address airlineAddress) view external returns(bool);
     function getNumAirlines() view external returns(uint256);

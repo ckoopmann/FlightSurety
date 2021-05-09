@@ -32,13 +32,14 @@ contract FlightSuretyData {
     */
     constructor
                                 (
-                                    address firstAirline
+                                    address airlineAddress,
+                                    string airlineName
                                 ) 
                                 public 
     {
         contractOwner = msg.sender;
         numAirlines = 0;
-        _registerAirline(firstAirline);
+        _registerAirline(airlineAddress, airlineName);
     }
 
     /********************************************************************************************/
@@ -121,36 +122,39 @@ contract FlightSuretyData {
     */   
     function registerAirline
                             (   
-                             address newAirline
+                                address airlineAddress,
+                                string airlineName
                             )
                             external
                             requireAuthorizedCaller
     {
-        require(!airlines[newAirline].isRegistered, "Airline is already registered");
-        _registerAirline(newAirline);
+        require(!airlines[airlineAddress].isRegistered, "Airline is already registered");
+        _registerAirline(airlineAddress, airlineName);
 
     }
 
     function _registerAirline
                             (   
-                             address newAirline
+                                address airlineAddress,
+                                string airlineName
                             )
                             internal
     {
-        airlines[newAirline].isRegistered = true;
+        airlines[airlineAddress].isRegistered = true;
+        airlines[airlineAddress].name = airlineName;
         numAirlines = numAirlines.add(1);
-        registeredAirlineAdresses.push(newAirline);
+        registeredAirlineAdresses.push(airlineAddress);
     }
 
     function fundAirline
                             (   
-                             address newAirline
+                             address airlineAddress
                             )
                             external
                             payable
                             requireAuthorizedCaller
     {
-        airlines[newAirline].isFunded = true;
+        airlines[airlineAddress].isFunded = true;
     }
 
     function getNumAirlines() view external returns(uint256){

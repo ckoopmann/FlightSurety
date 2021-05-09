@@ -70,7 +70,7 @@ contract("Flight Surety Tests", async (accounts) => {
 
     // ACT
     try {
-      await config.flightSuretyApp.registerAirline(newAirline, {
+      await config.flightSuretyApp.registerAirline(newAirline, "Second Airline", {
         from: config.firstAirline,
       });
     } catch {
@@ -104,9 +104,9 @@ contract("Flight Surety Tests", async (accounts) => {
     // ACT
     await config.flightSuretyApp.fundAirline(config.firstAirline, {
       from: config.firstAirline,
-      value: 10,
+      value: 10*config.weiMultiple,
     });
-    await config.flightSuretyApp.registerAirline(newAirline, {
+    await config.flightSuretyApp.registerAirline(newAirline, "Second Airline", {
       from: config.firstAirline,
     });
 
@@ -132,11 +132,11 @@ contract("Flight Surety Tests", async (accounts) => {
       let registeringAirline = accounts[i];
       let newAirline = accounts[i + 1];
       // ACT
-      await config.flightSuretyApp.fundAirline(registeringAirline, {
+      await config.flightSuretyApp.fundAirline(registeringAirline,  {
         from: registeringAirline,
-        value: 10,
+        value: 10*config.weiMultiple,
       });
-      await config.flightSuretyApp.registerAirline(newAirline, {
+      await config.flightSuretyApp.registerAirline(newAirline,`Airline ${i}`, {
         from: registeringAirline,
       });
       let result = await config.flightSuretyData.isRegistered.call(newAirline);
@@ -167,11 +167,11 @@ contract("Flight Surety Tests", async (accounts) => {
     let newAirline = accounts[numAirlines + 1];
     await config.flightSuretyApp.fundAirline(registeringAirline, {
       from: registeringAirline,
-      value: 10,
+      value: 10*config.weiMultiple,
     });
 
     // Act
-    await config.flightSuretyApp.registerAirline(newAirline, {
+    await config.flightSuretyApp.registerAirline(newAirline, "Fifth Airline", {
       from: registeringAirline,
     });
 
@@ -210,7 +210,7 @@ contract("Flight Surety Tests", async (accounts) => {
     let newAirline = accounts[numAirlines + 1];
     for (const registeringAirline of accounts.slice(1, 3)) {
       // Act
-      await config.flightSuretyApp.registerAirline(newAirline, {
+      await config.flightSuretyApp.registerAirline(newAirline, "Fifth Airline", {
         from: registeringAirline,
       });
     }
