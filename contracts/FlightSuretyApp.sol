@@ -176,12 +176,13 @@ contract FlightSuretyApp {
     */  
     function registerFlight
                                 (
-                                    address airline,
                                     string flight,
                                     uint256 timestamp
                                 )
+                                requireFundedAirline()
                                 external
     {
+        address airline = msg.sender;
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
         Flight flightObject = flights[flightKey];
         require(!flightObject.isRegistered, "flightObject is already registered");
