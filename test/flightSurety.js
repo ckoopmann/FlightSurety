@@ -63,6 +63,29 @@ contract("Flight Surety Tests", async (accounts) => {
     await config.flightSuretyData.setOperatingStatus(true);
   });
 
+  it("(airline) cannot register a flight using registerFlight() if it is not funded", async () => {
+    // ARRANGE
+    let transActionFailed = false;
+    let flight = "F123";
+    let timestamp = 123456;
+
+    // ACT
+    try {
+      await config.flightSuretyApp.registerFlight(flight, timestamp, {
+        from: config.firstAirline,
+      });
+    } catch {
+      transActionFailed = true;
+    }
+
+    // ASSERT
+    assert.equal(
+      transActionFailed,
+      true,
+      "Transaction should fail when trying to register from an unfunded airline"
+    );
+  });
+
   it("(airline) cannot register an Airline using registerAirline() if it is not funded", async () => {
     // ARRANGE
     let newAirline = accounts[2];
@@ -99,15 +122,19 @@ contract("Flight Surety Tests", async (accounts) => {
 
   it("(airline) can register an Airline using registerAirline() if it is funded", async () => {
     // ARRANGE
+    let registeringAirline = config.firstAirline;
     let newAirline = accounts[2];
 
     // ACT
-    await config.flightSuretyApp.fundAirline(config.firstAirline, {
-      from: config.firstAirline,
-      value: 10*config.weiMultiple,
-    });
+    let isFunded = await config.flightSuretyData.isFunded(registeringAirline);
+    if(! isFunded){
+      await config.flightSuretyApp.fundAirline(registeringAirline, {
+        from: registeringAirline,
+        value: 10*config.weiMultiple,
+      });
+    }
     await config.flightSuretyApp.registerAirline(newAirline, "Second Airline", {
-      from: config.firstAirline,
+      from: registeringAirline,
     });
 
     let result = await config.flightSuretyData.isRegistered.call(newAirline);
@@ -124,6 +151,28 @@ contract("Flight Surety Tests", async (accounts) => {
       2,
       "Number airlines updated after successfull registration of second airline"
     );
+  });
+
+  it("(airline) can register a flight using registerFlight() if it is funded", async () => {
+    // ARRANGE
+    let registeringAirline = config.firstAirline;
+    let flight = "F123";
+    let timestamp = 123456;
+
+    // ACT
+    let isFunded = await config.flightSuretyData.isFunded(registeringAirline);
+    if(! isFunded){
+      await config.flightSuretyApp.fundAirline(registeringAirline, {
+        from: registeringAirline,
+        value: 10*config.weiMultiple,
+      });
+    }
+    await config.flightSuretyApp.registerFlight(flight, timestamp, {
+      from: config.firstAirline,
+    });
+
+
+    // ASSERT
   });
 
   it("new airline can register next airline until four airlines reached", async () => {

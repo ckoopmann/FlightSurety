@@ -49,6 +49,7 @@ contract FlightSuretyApp {
     event VotedForFunctionCall(address caller, string functionName, bytes32 argumentHash, uint256 voteCount, uint256 threshold);
     event ResetVotesForFunctionCall(string functionName, bytes32 argumentHash);
     event AirlineRegistered(address airlineAddress, string airlineName);
+    event FlightRegistered(address airlineAddress, string flight, uint256 timestamp);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -185,11 +186,12 @@ contract FlightSuretyApp {
         address airline = msg.sender;
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
         Flight flightObject = flights[flightKey];
-        require(!flightObject.isRegistered, "flightObject is already registered");
+        require(!flightObject.isRegistered, "Flight is already registered");
         flightObject.isRegistered = true;
         flightObject.statusCode = STATUS_CODE_UNKNOWN;
         flightObject.updatedTimestamp = timestamp;
         flightObject.airline = airline;
+        emit FlightRegistered(airline, flight, timestamp);
     }
     
    /**
