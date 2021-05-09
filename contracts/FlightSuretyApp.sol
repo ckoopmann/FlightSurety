@@ -26,6 +26,7 @@ contract FlightSuretyApp {
     uint256 private constant MINIMUM_FUNDING = 10 ether;
 
     address private contractOwner;          // Account used to deploy contract
+    
 
     struct Flight {
         bool isRegistered;
