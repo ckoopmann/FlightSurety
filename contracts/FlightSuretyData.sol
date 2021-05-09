@@ -12,12 +12,13 @@ contract FlightSuretyData {
     struct Airline {
         bool isRegistered;                              
         bool isFunded;
-        bool isQueued;
+        string name;
     }
     address private contractOwner;                                      // Account used to deploy contract
     bool private operational = true;                                    // Blocks all state changes throughout the contract if false
     mapping(address=>bool) authorizedCallers;
     mapping(address=>Airline) airlines;
+    address[] registeredAirlineAdresses; // separate list of registered airline adresses to be able to iterate. (Since there does not seem to be a way to iterate over mapping keys)
     uint256 numAirlines;
 
     /********************************************************************************************/
@@ -138,6 +139,7 @@ contract FlightSuretyData {
     {
         airlines[newAirline].isRegistered = true;
         numAirlines = numAirlines.add(1);
+        registeredAirlineAdresses.push(newAirline);
     }
 
     function fundAirline
@@ -178,6 +180,22 @@ contract FlightSuretyData {
     {
         Airline airline = airlines[airlineAddress];
         return airline.isFunded;
+    }
+
+    function getName
+                        (
+                            address airlineAddress
+                        )
+                        view
+                        external
+                        returns(string) 
+    {
+        Airline airline = airlines[airlineAddress];
+        return airline.name;
+    }
+
+    function getRegisteredAirlines() view external returns(address[] addresses){
+        addresses = registeredAirlineAdresses;
     }
 
 

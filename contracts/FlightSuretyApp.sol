@@ -176,7 +176,6 @@ contract FlightSuretyApp {
                                 (
                                 )
                                 external
-                                pure
     {
 
     }
