@@ -9,6 +9,8 @@ contract FlightSuretyData {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
+    uint256 MAX_INSURED_AMOUNT = 1 ether;
+
     struct Airline {
         bool isRegistered;                              
         bool isFunded;
@@ -131,6 +133,8 @@ contract FlightSuretyData {
                                 address airlineAddress,
                                 string airlineName
                             )
+                            requireIsOperational()
+                            requireAuthorizedCaller()
                             external
                             requireAuthorizedCaller
     {
@@ -158,7 +162,8 @@ contract FlightSuretyData {
                             )
                             external
                             payable
-                            requireAuthorizedCaller
+                            requireIsOperational()
+                            requireAuthorizedCaller()
     {
         airlines[airlineAddress].isFunded = true;
     }
@@ -220,10 +225,13 @@ contract FlightSuretyData {
                             )
                             external
                             payable
+                            requireIsOperational()
+                            requireAuthorizedCaller()
     {
         require(msg.value > 0, "Cannot buy 0 value insurance");
         Policy policy = flightPolicies[flightKey];
 
+        require(policy.insuredAmounts[passenger].add(msg.value) <= MAX_INSURED_AMOUNT, "Insured amount exceeds maximum insurance");
         if(policy.insuredAmounts[passenger] == 0){
             policy.holders.push(passenger);
         }
@@ -239,6 +247,8 @@ contract FlightSuretyData {
                                     bytes32 flightKey
                                 )
                                 external
+                            requireIsOperational()
+                            requireAuthorizedCaller()
     {
         Policy policy = flightPolicies[flightKey];
         require(policy.holders.length > 0, "Policy has no holders to pay out");
@@ -258,13 +268,16 @@ contract FlightSuretyData {
     */
     function pay
                             (
+                                address passenger
                             )
                             external
+                            requireIsOperational()
+                            requireAuthorizedCaller()
     {
-        require(passengerCredits[msg.sender] > 0, "Sender has no credit available for payout");
-        uint256 credit = passengerCredits[msg.sender];
-        delete passengerCredits[msg.sender];
-        msg.sender.transfer(credit);
+        require(passengerCredits[passenger] > 0, "Passenger has no credit available for payout");
+        uint256 credit = passengerCredits[passenger];
+        delete passengerCredits[passenger];
+        passenger.transfer(credit);
     }
 
    /**
