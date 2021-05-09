@@ -33,6 +33,10 @@ contract FlightSuretyData {
     /*                                       EVENT DEFINITIONS                                  */
     /********************************************************************************************/
 
+    event InsuranceBought(address passenger, bytes32 flightKey, uint256 amount);
+    event PassengerCredited(address passenger, uint256 payout);
+    event PolicyPayedOut(bytes32 flightKey, uint256 totalPayout);
+
 
     /**
     * @dev Constructor
@@ -237,6 +241,8 @@ contract FlightSuretyData {
         }
 
         policy.insuredAmounts[passenger] = policy.insuredAmounts[passenger].add(msg.value);
+        emit InsuranceBought(passenger, flightKey, msg.value);
+
     }
 
     /**
@@ -252,13 +258,17 @@ contract FlightSuretyData {
     {
         Policy policy = flightPolicies[flightKey];
         require(policy.holders.length > 0, "Policy has no holders to pay out");
+        uint256 totalPayout = 0;
         for(uint i = 0; i < policy.holders.length; i++){
             address passenger = policy.holders[i];
             uint256 insuredAmount = policy.insuredAmounts[passenger];
             uint256 payout = insuredAmount.add(insuredAmount.div(2)); // Credit 1.5 times the insured amount
             passengerCredits[passenger] = passengerCredits[passenger].add(payout);
+            totalPayout.add(payout);
+            emit PassengerCredited(passenger, payout);
         }
         delete flightPolicies[flightKey]; // Delte policy to free up space and avoid duplicate payout
+        emit PolicyPayedOut(flightKey, totalPayout);
     }
     
 

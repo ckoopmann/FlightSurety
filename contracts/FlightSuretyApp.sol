@@ -176,10 +176,19 @@ contract FlightSuretyApp {
     */  
     function registerFlight
                                 (
+                                    address airline,
+                                    string flight,
+                                    uint256 timestamp
                                 )
                                 external
     {
-
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        Flight flightObject = flights[flightKey];
+        require(!flightObject.isRegistered, "flightObject is already registered");
+        flightObject.isRegistered = true;
+        flightObject.statusCode = STATUS_CODE_UNKNOWN;
+        flightObject.updatedTimestamp = timestamp;
+        flightObject.airline = airline;
     }
     
    /**
