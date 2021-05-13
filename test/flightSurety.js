@@ -213,7 +213,7 @@ contract("Flight Surety Tests", async (accounts) => {
       "4 airlines need to be registered for this test"
     );
     let registeringAirline = accounts[numAirlines];
-    let newAirline = accounts[numAirlines + 1];
+    let newAirline = accounts[5];
     await config.flightSuretyApp.fundAirline(registeringAirline, {
       from: registeringAirline,
       value: 10*config.weiMultiple,
@@ -256,7 +256,7 @@ contract("Flight Surety Tests", async (accounts) => {
       "4 airlines need to be registered for this test"
     );
 
-    let newAirline = accounts[numAirlines + 1];
+    let newAirline = accounts[5];
     for (const registeringAirline of accounts.slice(1, 3)) {
       // Act
       await config.flightSuretyApp.registerAirline(newAirline, "Fifth Airline", {
