@@ -43,6 +43,16 @@ import "./flightsurety.css";
       display("Registered Flights", "Show registered Flights", flightData);
     });
 
+    // // Show events
+    // contract.flightSuretyApp.events.allEvents(function (err, log) {
+    //   if(err) console.log(err)
+    //   else {
+    //     $("#app-events").append(
+    //       "<li>" + log.event + " - " + log.transactionHash + "</li>"
+    //     );
+    //   }
+    // });
+
     // User-submitted transaction
     DOM.elid("submit-oracle").addEventListener("click", () => {
       let flight = DOM.elid("flight-number").value;
