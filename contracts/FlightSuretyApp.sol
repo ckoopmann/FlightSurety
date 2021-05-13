@@ -33,8 +33,10 @@ contract FlightSuretyApp {
         uint8 statusCode;
         uint256 updatedTimestamp;        
         address airline;
+        string name;
     }
     mapping(bytes32 => Flight) private flights;
+    bytes32[] registeredFlightKeys;
     struct ConsensusTracker {
         mapping(address => bool) votedAddresses;
         uint256 voteCount;
@@ -191,8 +193,29 @@ contract FlightSuretyApp {
         flightObject.statusCode = STATUS_CODE_UNKNOWN;
         flightObject.updatedTimestamp = timestamp;
         flightObject.airline = airline;
+        flightObject.name = flight;
+        registeredFlightKeys.push(flightKey);
         emit FlightRegistered(airline, flight, timestamp);
     }
+
+    function registeredFlights() external view returns(bytes32[]){
+        return registeredFlightKeys;
+    }
+
+    function getFlightData(bytes32 flightKey) external view returns(
+                                                                uint8 statusCode,
+                                                                uint256 updatedTimestamp,
+                                                                address airline,
+                                                                string name)
+    {
+        Flight flightObject = flights[flightKey];
+        require(flightObject.isRegistered, "Requested Flight is not registered");
+        statusCode = flightObject.statusCode;
+        updatedTimestamp = flightObject.updatedTimestamp;
+        airline = flightObject.airline;
+        name = flightObject.name;
+    }
+    
     
    /**
     * @dev Called after oracle has updated flight status
@@ -231,6 +254,22 @@ contract FlightSuretyApp {
 
         emit OracleRequest(index, airline, flight, timestamp);
     } 
+    
+    function buy 
+                        (
+                            address airline,
+                            string flight,
+                            uint256 timestamp                            
+                        )
+                        external
+                        payable
+    {
+        require(msg.value > 0, "Cannot buy 0 value insurance");
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+        require(flights[flightKey].isRegistered, "Flight is not registered");
+        dataContract.buy.value(msg.value)(flightKey, msg.sender);
+    }
+
 
 
 // region ORACLE MANAGEMENT
@@ -412,4 +451,5 @@ contract FlightSuretyData {
     function isRegistered ( address airlineAddress) view external returns(bool);
     function isFunded ( address airlineAddress) view external returns(bool);
     function getNumAirlines() view external returns(uint256);
+    function buy (bytes32 flightKey, address passenger) external payable;
 }

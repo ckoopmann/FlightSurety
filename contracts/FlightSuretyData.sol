@@ -232,7 +232,6 @@ contract FlightSuretyData {
                             requireIsOperational()
                             requireAuthorizedCaller()
     {
-        require(msg.value > 0, "Cannot buy 0 value insurance");
         Policy policy = flightPolicies[flightKey];
 
         require(policy.insuredAmounts[passenger].add(msg.value) <= MAX_INSURED_AMOUNT, "Insured amount exceeds maximum insurance");

@@ -93,9 +93,13 @@ contract("Flight Surety Tests", async (accounts) => {
 
     // ACT
     try {
-      await config.flightSuretyApp.registerAirline(newAirline, "Second Airline", {
-        from: config.firstAirline,
-      });
+      await config.flightSuretyApp.registerAirline(
+        newAirline,
+        "Second Airline",
+        {
+          from: config.firstAirline,
+        }
+      );
     } catch {
       transActionFailed = true;
     }
@@ -127,10 +131,10 @@ contract("Flight Surety Tests", async (accounts) => {
 
     // ACT
     let isFunded = await config.flightSuretyData.isFunded(registeringAirline);
-    if(! isFunded){
+    if (!isFunded) {
       await config.flightSuretyApp.fundAirline(registeringAirline, {
         from: registeringAirline,
-        value: 10*config.weiMultiple,
+        value: 10 * config.weiMultiple,
       });
     }
     await config.flightSuretyApp.registerAirline(newAirline, "Second Airline", {
@@ -161,18 +165,31 @@ contract("Flight Surety Tests", async (accounts) => {
 
     // ACT
     let isFunded = await config.flightSuretyData.isFunded(registeringAirline);
-    if(! isFunded){
+    if (!isFunded) {
       await config.flightSuretyApp.fundAirline(registeringAirline, {
         from: registeringAirline,
-        value: 10*config.weiMultiple,
+        value: 10 * config.weiMultiple,
       });
     }
     await config.flightSuretyApp.registerFlight(flight, timestamp, {
       from: config.firstAirline,
     });
 
-
     // ASSERT
+    let registeredFlights = await config.flightSuretyApp.registeredFlights();
+    assert.equal(
+      registeredFlights.length,
+      1,
+      "One Flight should be registered"
+    );
+    let flightData = await config.flightSuretyApp.getFlightData(
+      registeredFlights[0]
+    );
+    assert.equal(
+      flightData.name,
+      flight,
+      "Flight Name / Number was not preserved correctly"
+    );
   });
 
   it("new airline can register next airline until four airlines reached", async () => {
@@ -181,11 +198,11 @@ contract("Flight Surety Tests", async (accounts) => {
       let registeringAirline = accounts[i];
       let newAirline = accounts[i + 1];
       // ACT
-      await config.flightSuretyApp.fundAirline(registeringAirline,  {
+      await config.flightSuretyApp.fundAirline(registeringAirline, {
         from: registeringAirline,
-        value: 10*config.weiMultiple,
+        value: 10 * config.weiMultiple,
       });
-      await config.flightSuretyApp.registerAirline(newAirline,`Airline ${i}`, {
+      await config.flightSuretyApp.registerAirline(newAirline, `Airline ${i}`, {
         from: registeringAirline,
       });
       let result = await config.flightSuretyData.isRegistered.call(newAirline);
@@ -216,7 +233,7 @@ contract("Flight Surety Tests", async (accounts) => {
     let newAirline = accounts[5];
     await config.flightSuretyApp.fundAirline(registeringAirline, {
       from: registeringAirline,
-      value: 10*config.weiMultiple,
+      value: 10 * config.weiMultiple,
     });
 
     // Act
@@ -259,24 +276,65 @@ contract("Flight Surety Tests", async (accounts) => {
     let newAirline = accounts[5];
     for (const registeringAirline of accounts.slice(1, 3)) {
       // Act
-      await config.flightSuretyApp.registerAirline(newAirline, "Fifth Airline", {
-        from: registeringAirline,
-      });
+      await config.flightSuretyApp.registerAirline(
+        newAirline,
+        "Fifth Airline",
+        {
+          from: registeringAirline,
+        }
+      );
     }
-
 
     let result = await config.flightSuretyData.isRegistered.call(newAirline);
     let numAirlinesAfter = await config.flightSuretyData.getNumAirlines.call();
     // ASSERT
-    assert.equal(
-      result,
-      true,
-      "With 3 votes new airline should be registered"
-    );
+    assert.equal(result, true, "With 3 votes new airline should be registered");
     assert.equal(
       numAirlines.toNumber() + 1,
       numAirlinesAfter.toNumber(),
       "Number airlines should have increased by 1"
     );
+  });
+
+  it("(passenger) can buy insurance for registered flight with correct amount", async () => {
+    // ARRANGe
+    let flight = "Testflight2";
+    let timestamp = 123456;
+    let airline = accounts[2];
+    let passenger = accounts[7];
+    let amount = 0.1;
+
+    // ACT
+    await config.flightSuretyApp.registerFlight(flight, timestamp, {
+      from: airline,
+    });
+
+    await config.flightSuretyApp.buy(airline, flight, timestamp, {
+      from: passenger,
+      value: amount * config.weiMultiple,
+    });
+  });
+
+  it("(passenger) cannot buy insurance for unregistered flight", async () => {
+    // ARRANGe
+    let flight = "Testflight3";
+    let timestamp = 123456;
+    let airline = accounts[2];
+    let passenger = accounts[7];
+    let amount = 0.1;
+    let transactionFailed = false;
+
+    // ACT
+    try {
+      await config.flightSuretyApp.buy(airline, flight, timestamp, {
+        from: passenger,
+        value: amount * config.weiMultiple,
+      });
+    } catch (e) {
+      transactionFailed = true;
+    }
+    
+    //ASSERt
+    assert.equal(transactionFailed, true, "Passenger was able to buy insurance for unregistered flight");
   });
 });
