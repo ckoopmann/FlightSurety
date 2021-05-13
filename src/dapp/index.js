@@ -15,6 +15,11 @@ import './flightsurety.css';
             console.log(error,result);
             display('Operational Status', 'Check if contract is operational', [ { label: 'Operational Status', error: error, value: result} ]);
         });
+
+        contract.registeredAirlines((error, result) => {
+            console.log(error,result);
+            display('Registered Airline Addresses', 'Show registered Airlines', [ { label: 'Registered Airlines', error: error, value: result} ]);
+        });
     
 
         // User-submitted transaction
