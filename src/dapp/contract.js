@@ -46,6 +46,24 @@ export default class Contract {
       .call({ from: self.owner }, callback);
   }
 
+  registeredFlights(callback) {
+    let self = this;
+    self.flightSuretyApp.methods
+      .registeredFlights()
+      .call({ from: self.owner }, callback);
+  }
+
+  async getFlightData(key) {
+    let self = this;
+    let data = await self.flightSuretyApp.methods
+      .getFlightData(key)
+      .call({ from: self.owner });
+    return data;
+  }
+
+
+
+
   registeredAirlines(callback) {
     let self = this;
     self.flightSuretyData.methods

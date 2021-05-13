@@ -20,9 +20,27 @@ import "./flightsurety.css";
       for (const address of airlineAddresses) {
         let name = await contract.getAirlineName(address);
         let funded = await contract.isAirlineFunded(address);
-        airlineData.push({ label: name, value: JSON.stringify({ address, funded }) });
+        airlineData.push({
+          label: name,
+          value: JSON.stringify({ address, funded }),
+        });
       }
       display("Registered Airlines", "Show registered Airlines", airlineData);
+    });
+
+    contract.registeredFlights(async (error, flightKeys) => {
+      console.log(error, result);
+      let flightData = [];
+      for (const key of flightKeys) {
+        let data = await contract.getFlightData(key);
+        let airlineName = await contract.getAirlineName(data.airline);
+        let label = `${airlineName} - ${data.name} - ${data.updatedTimestamp}`;
+        flightData.push({
+          label: label,
+          value: key,
+        });
+      }
+      display("Registered Flights", "Show registered Flights", flightData);
     });
 
     // User-submitted transaction
