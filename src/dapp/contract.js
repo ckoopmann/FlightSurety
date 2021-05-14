@@ -63,9 +63,6 @@ export default class Contract {
     return data;
   }
 
-
-
-
   registeredAirlines(callback) {
     let self = this;
     self.flightSuretyData.methods
@@ -89,7 +86,6 @@ export default class Contract {
     return name;
   }
 
-
   fetchFlightStatus(flight, callback) {
     let self = this;
     let payload = {
@@ -109,9 +105,11 @@ export default class Contract {
     let self = this;
     self.flightSuretyApp.methods
       .buyWithKey(flightKey)
-      .send({from: self.owner, value: weiAmount}, (error, result) => {
-        callback(error, result);
-      });
+      .send(
+        { from: self.owner, value: weiAmount, gas: 1000000 },
+        (error, result) => {
+          callback(error, result);
+        }
+      );
   }
 }
-
