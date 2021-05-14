@@ -67,6 +67,24 @@ import "./flightsurety.css";
         ]);
       });
     });
+
+    // User-submitted transaction
+    DOM.elid("buy-insurance").addEventListener("click", () => {
+      let flightKey = DOM.elid("flight-key").value;
+      let amount = parseFloat(DOM.elid("insurance-amount").value);
+      // Write transaction
+      contract.buyInsurance(flightKey, amount, (error, result) => {
+        display("Insurance", "Bought Insurances", [
+          {
+            label: "Buy Insurance",
+            error: error,
+            value: `flight: ${flightKey}, amount: ${amount}, result: ${result}`,
+          },
+        ]);
+      });
+    });
+
+
   });
 })();
 

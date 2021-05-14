@@ -2,6 +2,7 @@ import FlightSuretyApp from "../../build/contracts/FlightSuretyApp.json";
 import FlightSuretyData from "../../build/contracts/FlightSuretyData.json";
 import Config from "./config.json";
 import Web3 from "web3";
+var BigNumber = require("bignumber.js");
 
 export default class Contract {
   constructor(network, callback) {
@@ -17,6 +18,7 @@ export default class Contract {
     );
     this.initialize(callback);
     this.owner = null;
+    this.weiMultiple = new BigNumber(10).pow(18);
     this.airlines = [];
     this.passengers = [];
   }
@@ -99,6 +101,16 @@ export default class Contract {
       .fetchFlightStatus(payload.airline, payload.flight, payload.timestamp)
       .send({ from: self.owner }, (error, result) => {
         callback(error, payload);
+      });
+  }
+
+  buyInsurance(flightKey, amount, callback) {
+    const weiAmount = this.weiMultiple * amount;
+    let self = this;
+    self.flightSuretyApp.methods
+      .buyWithKey(flightKey)
+      .send({from: self.owner, value: weiAmount}, (error, result) => {
+        callback(error, result);
       });
   }
 }
