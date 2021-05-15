@@ -8,6 +8,8 @@ contract("Flight Surety Tests", async (accounts) => {
     await config.flightSuretyData.authorizeCaller(
       config.flightSuretyApp.address
     );
+    // Authorize owner for unittesting data contract methods that require authorized caller
+    await config.flightSuretyData.authorizeCaller(config.owner);
   });
 
   /****************************************************************************************/
@@ -333,8 +335,122 @@ contract("Flight Surety Tests", async (accounts) => {
     } catch (e) {
       transactionFailed = true;
     }
-    
+
     //ASSERt
-    assert.equal(transactionFailed, true, "Passenger was able to buy insurance for unregistered flight");
+    assert.equal(
+      transactionFailed,
+      true,
+      "Passenger was able to buy insurance for unregistered flight"
+    );
+  });
+
+  it("(passenger) cannot buy insurance for unregistered flight", async () => {
+    // ARRANGe
+    let flight = "Testflight3";
+    let timestamp = 123456;
+    let airline = accounts[2];
+    let passenger = accounts[7];
+    let amount = 0.1;
+    let transactionFailed = false;
+
+    // ACT
+    try {
+      await config.flightSuretyApp.buy(airline, flight, timestamp, {
+        from: passenger,
+        value: amount * config.weiMultiple,
+      });
+    } catch (e) {
+      transactionFailed = true;
+    }
+
+    //ASSERt
+    assert.equal(
+      transactionFailed,
+      true,
+      "Passenger was able to buy insurance for unregistered flight"
+    );
+  });
+
+  it("Crediting Insurees works inside the data contract", async () => {
+    // ARRANGe
+    let flightKey =
+      "0x3198cd775b27e78fe1b0dad8520f6f5653999c55f69ede22bed323a2e437b763";
+    let passenger = accounts[8];
+    let amount = 0.1;
+    let balanceBefore = await web3.eth.getBalance(passenger);
+
+    // ACT
+    await config.flightSuretyData.buy(flightKey, passenger, {
+      from: config.owner,
+      value: amount * config.weiMultiple,
+    });
+
+    await config.flightSuretyData.creditInsurees(flightKey, {
+      from: config.owner,
+    });
+
+    await config.flightSuretyData.pay(passenger, {
+      from: config.owner,
+    });
+
+    let balanceAfter = await web3.eth.getBalance(passenger);
+
+    // Assert
+    assert.isAbove(
+      parseInt(balanceAfter),
+      parseInt(balanceBefore),
+      "Passenger with payed out insurance should have an increased balance"
+    );
+    
+  });
+
+  it("Insurance holders are credited when three oracles register an airline delay", async () => {
+    // ARRANGe
+    let passenger = accounts[9];
+    let amount = 0.1;
+    let registrationFee = 1;
+    let balanceBefore = await web3.eth.getBalance(passenger);
+    let flight = "F123456";
+    let timestamp = 123456;
+    let mockIndices = [1,2,3];
+
+    let oracles = accounts.slice(1,5)
+
+    // ACT
+    // Mock out random index to always return same value for testing purposes
+    await config.flightSuretyApp.mockRandomIndex(mockIndices, {
+      from: config.owner,
+    });
+
+    await config.flightSuretyApp.registerFlight(flight, timestamp, {
+      from: config.firstAirline,
+    });
+
+    await config.flightSuretyApp.buy(config.firstAirline, flight, timestamp, {
+      from: passenger,
+      value: amount * config.weiMultiple,
+    });
+
+    for(const oracle of oracles){
+      await config.flightSuretyApp.registerOracle({from: oracle, value: registrationFee*config.weiMultiple})
+    }
+
+    config.flightSuretyApp.fetchFlightStatus(config.firstAirline, flight, timestamp);
+
+
+    await config.flightSuretyApp.unMockRandomIndex({
+      from: config.owner,
+    });
+
+
+    let balanceAfter = await web3.eth.getBalance(passenger);
+
+    // Assert
+    // assert.isAbove(
+    //   parseInt(balanceAfter),
+    //   parseInt(balanceBefore),
+    //   "Passenger with payed out insurance should have an increased balance"
+    // );
+    
   });
 });

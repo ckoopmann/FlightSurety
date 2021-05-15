@@ -294,6 +294,12 @@ contract FlightSuretyApp {
     uint256 private constant MIN_RESPONSES = 3;
 
 
+    // Variables controlling mock out of random index during testing
+    uint8[3] mockIndices;
+    uint currMockIndex;
+    bool indexMocked;
+
+
     struct Oracle {
         bool isRegistered;
         uint8[3] indexes;        
@@ -324,6 +330,9 @@ contract FlightSuretyApp {
     // Oracles track this and if they have a matching index
     // they fetch data and submit a response
     event OracleRequest(uint8 index, address airline, string flight, uint256 timestamp);
+    event OracleRegistered(address oracle, uint8[3] indexes);
+    event MockRandomIndex(uint8[3] mockIndex);
+    event UnMockRandomIndex();
 
 
     // Register an oracle with the contract
@@ -342,6 +351,7 @@ contract FlightSuretyApp {
                                         isRegistered: true,
                                         indexes: indexes
                                     });
+        emit OracleRegistered(msg.sender, indexes);
     }
 
     function getMyIndexes
@@ -439,16 +449,41 @@ contract FlightSuretyApp {
                             internal
                             returns (uint8)
     {
-        uint8 maxValue = 10;
+        // Mocked Index for testing purposes
+        if(indexMocked){
+            uint i = currMockIndex % 3;
+            currMockIndex = currMockIndex + 1;
+            return mockIndices[i];
+        }
+        else{
+            uint8 maxValue = 10;
 
-        // Pseudo random number...the incrementing nonce adds variation
-        uint8 random = uint8(uint256(keccak256(abi.encodePacked(blockhash(block.number - nonce++), account))) % maxValue);
+            // Pseudo random number...the incrementing nonce adds variation
+            uint8 random = uint8(uint256(keccak256(abi.encodePacked(blockhash(block.number - nonce++), account))) % maxValue);
 
-        if (nonce > 250) {
-            nonce = 0;  // Can only fetch blockhashes for last 256 blocks so we adapt
+            if (nonce > 250) {
+                nonce = 0;  // Can only fetch blockhashes for last 256 blocks so we adapt
+            }
+
+            return random;
         }
 
-        return random;
+    }
+
+    // Method to mock out the random index with a fixed value for testing purposes
+    function mockRandomIndex(uint8[3] _mockIndices) public requireContractOwner(){
+        mockIndices = _mockIndices;
+        indexMocked = true;
+        currMockIndex = 0;
+        emit MockRandomIndex(_mockIndices);
+
+    }
+
+    // Method to unmock the random index
+    function unMockRandomIndex() public requireContractOwner(){
+        indexMocked = false;
+        emit UnMockRandomIndex();
+
     }
 
 // endregion

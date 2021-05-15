@@ -10,6 +10,7 @@ module.exports = function (deployer, network, accounts) {
     { flight: "T1", timestamp: 123000 },
     { flight: "T2", timestamp: 345000 },
   ];
+  const weiMultiple = new BigNumber(10).pow(18);
 
   deployer
     .deploy(FlightSuretyData, firstAirlineAddress, firstAirlineName)
@@ -20,7 +21,6 @@ module.exports = function (deployer, network, accounts) {
           const appInstance = await FlightSuretyApp.deployed();
           const dataInstance = await FlightSuretyData.deployed();
           await dataInstance.authorizeCaller(FlightSuretyApp.address);
-          const weiMultiple = new BigNumber(10).pow(18);
           await appInstance.fundAirline(firstAirlineAddress, {
             from: firstAirlineAddress,
             value: 10 * weiMultiple,

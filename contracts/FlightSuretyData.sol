@@ -36,6 +36,7 @@ contract FlightSuretyData {
     event InsuranceBought(address passenger, bytes32 flightKey, uint256 amount);
     event PassengerCredited(address passenger, uint256 payout);
     event PolicyPayedOut(bytes32 flightKey, uint256 totalPayout);
+    event PassengerPayedOut(address passenger, uint256 payout);
 
 
     /**
@@ -263,7 +264,7 @@ contract FlightSuretyData {
             uint256 insuredAmount = policy.insuredAmounts[passenger];
             uint256 payout = insuredAmount.add(insuredAmount.div(2)); // Credit 1.5 times the insured amount
             passengerCredits[passenger] = passengerCredits[passenger].add(payout);
-            totalPayout.add(payout);
+            totalPayout = totalPayout.add(payout);
             emit PassengerCredited(passenger, payout);
         }
         delete flightPolicies[flightKey]; // Delte policy to free up space and avoid duplicate payout
@@ -287,6 +288,7 @@ contract FlightSuretyData {
         uint256 credit = passengerCredits[passenger];
         delete passengerCredits[passenger];
         passenger.transfer(credit);
+        emit PassengerPayedOut(passenger, credit);
     }
 
    /**
