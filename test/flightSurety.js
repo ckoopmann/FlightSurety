@@ -457,6 +457,10 @@ contract("Flight Surety Tests", async (accounts) => {
       from: config.owner,
     });
 
+    await config.flightSuretyData.pay(passenger, {
+      from: config.owner,
+    });
+
     let balanceAfter = await web3.eth.getBalance(passenger);
 
     // Assert

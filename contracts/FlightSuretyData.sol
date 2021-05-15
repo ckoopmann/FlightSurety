@@ -257,7 +257,9 @@ contract FlightSuretyData {
                             requireAuthorizedCaller()
     {
         Policy policy = flightPolicies[flightKey];
-        require(policy.holders.length > 0, "Policy has no holders to pay out");
+        if(policy.holders.length == 0){
+            return;
+        }
         uint256 totalPayout = 0;
         for(uint i = 0; i < policy.holders.length; i++){
             address passenger = policy.holders[i];
