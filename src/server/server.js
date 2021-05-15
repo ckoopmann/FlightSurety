@@ -11,7 +11,7 @@ let web3 = new Web3(
   new Web3.providers.WebsocketProvider(config.url.replace("http", "ws"))
 );
 web3.eth.defaultAccount = web3.eth.accounts[0];
-let numOracles = 2;
+let numOracles = 30;
 let flightSuretyApp = new web3.eth.Contract(
   FlightSuretyApp.abi,
   config.appAddress
@@ -19,7 +19,7 @@ let flightSuretyApp = new web3.eth.Contract(
 
 function getRandomStatusCode() {
   const proportionalStatusCodes = [20, 20];
-  var code = proportionalStatusCodes[Math.floor(Math.random() * items.length)];
+  var code = proportionalStatusCodes[Math.floor(Math.random() * proportionalStatusCodes.length)];
   return code;
 }
 
@@ -32,19 +32,18 @@ async function registerOracles() {
     await flightSuretyApp.methods.registerOracle().send({
       from: account,
       value: 1 * weiMultiple,
-      gas: 1000000,
+      gas: 10000000,
     });
     console.log("Registered Oracle at address: ", account);
     let indexes = await flightSuretyApp.methods.getMyIndexes().call({
       from: account,
-      gas: 1000000,
+      gas: 10000000,
     });
     console.log("Got assigned indexes: ", indexes);
-    for(var index of indexes){
-      if(index in oracleData){
+    for (var index of indexes) {
+      if (index in oracleData) {
         oracleData[index].push(account);
-      }
-      else {
+      } else {
         oracleData[index] = [account];
       }
     }
@@ -57,22 +56,28 @@ function processRequests(oracleData) {
     {
       fromBlock: 0,
     },
-    function (error, event) {
+    async function (error, event) {
       if (error) console.log(error);
       else {
         console.log("Oracle Request received for Index:", event.returnValues);
-        const index = event.returnValues.index;
-        if(index in oracleData){
+        const {index, airline, flight, timestamp} = event.returnValues;
+        if (index in oracleData) {
           const oracleAddresses = oracleData[index];
-          console.log(`Registered Oracles for index ${index}: `, oracleAddresses)
-          for(oracle in oracleAddresses){
+          console.log(
+            `Registered Oracles for index ${index}: `,
+            oracleAddresses
+          );
+          for (var oracle of oracleAddresses) {
+            let statusCode = getRandomStatusCode();
+            await flightSuretyApp.methods.submitOracleResponse(index, airline, flight, timestamp, statusCode).send({
+              from: oracle,
+              gas: 1000000,
+            });
+            console.log(`Oracle: ${oracle} submitted status: ${statusCode} for flight: ${flight}`)
           }
-
+        } else {
+          console.log("No oracles registered for requested index: ", index);
         }
-        else{
-          console.log("No oracles registered for requested index: ", index)
-        }
-
       }
     }
   );
