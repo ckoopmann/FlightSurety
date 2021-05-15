@@ -44,14 +44,31 @@ import "./flightsurety.css";
     });
 
     // // Show events
-    // contract.flightSuretyApp.events.allEvents(function (err, log) {
-    //   if(err) console.log(err)
-    //   else {
-    //     $("#app-events").append(
-    //       "<li>" + log.event + " - " + log.transactionHash + "</li>"
-    //     );
-    //   }
-    // });
+    contract.flightSuretyApp.events.allEvents(function (err, log) {
+      if (err) console.log(err);
+      else {
+        console.log(log);
+        var node = document.createElement("LI");                 // Create a <li> node
+        var textnode = document.createTextNode(log.event + " - " + log.transactionHash);         // Create a text node
+        node.appendChild(textnode);
+        DOM.elid("app-events").appendChild(
+          node
+        );
+      }
+    });
+
+    contract.flightSuretyData.events.allEvents(function (err, log) {
+      if (err) console.log(err);
+      else {
+        console.log(log);
+        var node = document.createElement("LI");                 // Create a <li> node
+        var textnode = document.createTextNode(log.event + " - " + log.transactionHash);         // Create a text node
+        node.appendChild(textnode);
+        DOM.elid("data-events").appendChild(
+          node
+        );
+      }
+    });
 
     // User-submitted transaction
     DOM.elid("submit-oracle").addEventListener("click", () => {
@@ -89,19 +106,22 @@ import "./flightsurety.css";
       let timestamp = DOM.elid("flight-timestamp").value;
       let amount = parseFloat(DOM.elid("insurance-amount-metadata").value);
       // Write transaction
-      contract.buyInsuranceMetadata(flight, airline, timestamp, amount, (error, result) => {
-        display("Insurance", "Bought Insurances", [
-          {
-            label: "Buy Insurance",
-            error: error,
-            value: `flight: ${flight}, amount: ${amount}, result: ${result}`,
-          },
-        ]);
-      });
+      contract.buyInsuranceMetadata(
+        flight,
+        airline,
+        timestamp,
+        amount,
+        (error, result) => {
+          display("Insurance", "Bought Insurances", [
+            {
+              label: "Buy Insurance",
+              error: error,
+              value: `flight: ${flight}, amount: ${amount}, result: ${result}`,
+            },
+          ]);
+        }
+      );
     });
-
-
-
   });
 })();
 
