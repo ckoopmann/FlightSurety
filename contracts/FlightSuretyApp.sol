@@ -52,7 +52,6 @@ contract FlightSuretyApp {
     event ResetVotesForFunctionCall(string functionName, bytes32 argumentHash);
     event AirlineRegistered(address airlineAddress, string airlineName);
     event FlightRegistered(address airlineAddress, string flight, uint256 timestamp);
-    event RequestInsurance(bytes32 flightKey, uint256 amount, address passenger);
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -256,18 +255,17 @@ contract FlightSuretyApp {
         emit OracleRequest(index, airline, flight, timestamp);
     } 
     
-    function buyWithKey 
+    function buyWithKey
                         (
-                            bytes32 flightKey
+                            bytes32 flightKey                             
                         )
+                        public
                         payable
     {
         require(msg.value > 0, "Cannot buy 0 value insurance");
         require(flights[flightKey].isRegistered, "Flight is not registered");
-        emit RequestInsurance(flightKey, msg.value, msg.sender);
         dataContract.buy.value(msg.value)(flightKey, msg.sender);
     }
-
 
 
     function buy 
@@ -279,6 +277,7 @@ contract FlightSuretyApp {
                         external
                         payable
     {
+        require(msg.value > 0, "Cannot buy 0 value insurance");
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
         buyWithKey(flightKey);
     }

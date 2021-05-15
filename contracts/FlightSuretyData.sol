@@ -21,11 +21,11 @@ contract FlightSuretyData {
     mapping(address=>bool) authorizedCallers;
     mapping(address=>Airline) airlines;
     address[] registeredAirlineAdresses; // separate list of registered airline adresses to be able to iterate. (Since there does not seem to be a way to iterate over mapping keys)
-    struct Holder {
-        address passengerAddress;
-        uint256 insuredAmount;
+    struct Policy {
+        address[] holders;
+        mapping(address => uint256) insuredAmounts; // Mapping of holder address on insured amount for this policy
     }
-    Holder[] holders; 
+    mapping(bytes32 => Policy) flightPolicies; // Mapping of Flight key on its Policy object
     mapping(address => uint256) passengerCredits;
     uint256 numAirlines;
 
@@ -213,6 +213,11 @@ contract FlightSuretyData {
         return airline.name;
     }
 
+    function getRegisteredAirlines() view external returns(address[] addresses){
+        addresses = registeredAirlineAdresses;
+    }
+
+
    /**
     * @dev Buy insurance for a flight
     *
@@ -227,20 +232,14 @@ contract FlightSuretyData {
                             requireIsOperational()
                             requireAuthorizedCaller()
     {
+        Policy policy = flightPolicies[flightKey];
 
-        require(msg.value <= MAX_INSURED_AMOUNT, "Insured amount exceeds maximum insurance");
-        Holder[] contractHolders = holders;
-        for(uint i =0; i<contractHolders.length; i++){
-            Holder currentHolder = contractHolders[i];
-            require(currentHolder.passengerAddress != passenger, "Passenger is already insured");
+        require(policy.insuredAmounts[passenger].add(msg.value) <= MAX_INSURED_AMOUNT, "Insured amount exceeds maximum insurance");
+        if(policy.insuredAmounts[passenger] == 0){
+            policy.holders.push(passenger);
         }
 
-        Holder newHolder;
-        newHolder.passengerAddress = passenger;
-        newHolder.insuredAmount = msg.value;
-
-        contractHolders.push(newHolder);
-
+        policy.insuredAmounts[passenger] = policy.insuredAmounts[passenger].add(msg.value);
         emit InsuranceBought(passenger, flightKey, msg.value);
 
     }
@@ -256,20 +255,18 @@ contract FlightSuretyData {
                             requireIsOperational()
                             requireAuthorizedCaller()
     {
-        Holder[] contractHolders = holders;
-        require(contractHolders.length > 0, "Policy has no holders to pay out");
+        Policy policy = flightPolicies[flightKey];
+        require(policy.holders.length > 0, "Policy has no holders to pay out");
         uint256 totalPayout = 0;
-        for(uint i = 0; i < contractHolders.length; i++){
-            Holder contractHolder = contractHolders[i];
-            uint256 insuredAmount = contractHolder.insuredAmount;
-            address passenger = contractHolder.passengerAddress;
+        for(uint i = 0; i < policy.holders.length; i++){
+            address passenger = policy.holders[i];
+            uint256 insuredAmount = policy.insuredAmounts[passenger];
             uint256 payout = insuredAmount.add(insuredAmount.div(2)); // Credit 1.5 times the insured amount
             passengerCredits[passenger] = passengerCredits[passenger].add(payout);
             totalPayout.add(payout);
             emit PassengerCredited(passenger, payout);
         }
-        // delete contractHolders; // Delte policy to free up space and avoid duplicate payout
-
+        delete flightPolicies[flightKey]; // Delte policy to free up space and avoid duplicate payout
         emit PolicyPayedOut(flightKey, totalPayout);
     }
     
@@ -317,13 +314,6 @@ contract FlightSuretyData {
     {
         return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
-
-    function getRegisteredAirlines() view external returns(address[] addresses){
-        addresses = registeredAirlineAdresses;
-    }
-
-
-
 
     /**
     * @dev Fallback function for funding smart contract.
