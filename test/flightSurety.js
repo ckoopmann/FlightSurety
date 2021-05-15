@@ -401,7 +401,6 @@ contract("Flight Surety Tests", async (accounts) => {
       parseInt(balanceBefore),
       "Passenger with payed out insurance should have an increased balance"
     );
-    
   });
 
   it("Insurance holders are credited when three oracles register an airline delay", async () => {
@@ -412,18 +411,17 @@ contract("Flight Surety Tests", async (accounts) => {
     let balanceBefore = await web3.eth.getBalance(passenger);
     let flight = "F123456";
     let timestamp = 123456;
-    let mockIndices = [1,2,3];
+    let mockIndices = [1, 2, 3];
 
-    let oracles = accounts.slice(1,5)
+    let oracles = accounts.slice(1, 5);
+    let statusCodeAirlineDelay = 20;
+    let airline = config.firstAirline;
 
     // ACT
-    // Mock out random index to always return same value for testing purposes
-    await config.flightSuretyApp.mockRandomIndex(mockIndices, {
-      from: config.owner,
-    });
+    // Mock out random index to always return same value for testing purposes, so we only have to register 3 oracles
 
     await config.flightSuretyApp.registerFlight(flight, timestamp, {
-      from: config.firstAirline,
+      from: airline,
     });
 
     await config.flightSuretyApp.buy(config.firstAirline, flight, timestamp, {
@@ -431,17 +429,33 @@ contract("Flight Surety Tests", async (accounts) => {
       value: amount * config.weiMultiple,
     });
 
-    for(const oracle of oracles){
-      await config.flightSuretyApp.registerOracle({from: oracle, value: registrationFee*config.weiMultiple})
+    await config.flightSuretyApp.mockRandomIndex(mockIndices, {
+      from: config.owner,
+    });
+
+    for (const oracle of oracles) {
+      await config.flightSuretyApp.registerOracle({
+        from: oracle,
+        value: registrationFee * config.weiMultiple,
+      });
     }
 
-    config.flightSuretyApp.fetchFlightStatus(config.firstAirline, flight, timestamp);
+    config.flightSuretyApp.fetchFlightStatus(airline, flight, timestamp);
 
+    for (const oracle of oracles) {
+      await config.flightSuretyApp.submitOracleResponse(
+        1,
+        airline,
+        flight,
+        timestamp,
+        statusCodeAirlineDelay,
+        { from: oracle }
+      );
+    }
 
     await config.flightSuretyApp.unMockRandomIndex({
       from: config.owner,
     });
-
 
     let balanceAfter = await web3.eth.getBalance(passenger);
 
@@ -451,6 +465,5 @@ contract("Flight Surety Tests", async (accounts) => {
     //   parseInt(balanceBefore),
     //   "Passenger with payed out insurance should have an increased balance"
     // );
-    
   });
 });
