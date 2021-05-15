@@ -68,12 +68,11 @@ import "./flightsurety.css";
       });
     });
 
-    // User-submitted transaction
-    DOM.elid("buy-insurance").addEventListener("click", () => {
+    DOM.elid("buy-insurance-flightKey").addEventListener("click", () => {
       let flightKey = DOM.elid("flight-key").value;
       let amount = parseFloat(DOM.elid("insurance-amount").value);
       // Write transaction
-      contract.buyInsurance(flightKey, amount, (error, result) => {
+      contract.buyInsuranceFlightKey(flightKey, amount, (error, result) => {
         display("Insurance", "Bought Insurances", [
           {
             label: "Buy Insurance",
@@ -83,6 +82,24 @@ import "./flightsurety.css";
         ]);
       });
     });
+
+    DOM.elid("buy-insurance-metadata").addEventListener("click", () => {
+      let flight = DOM.elid("flight-name").value;
+      let airline = DOM.elid("flight-airline").value;
+      let timestamp = DOM.elid("flight-timestamp").value;
+      let amount = parseFloat(DOM.elid("insurance-amount-metadata").value);
+      // Write transaction
+      contract.buyInsuranceMetadata(flight, airline, timestamp, amount, (error, result) => {
+        display("Insurance", "Bought Insurances", [
+          {
+            label: "Buy Insurance",
+            error: error,
+            value: `flight: ${flight}, amount: ${amount}, result: ${result}`,
+          },
+        ]);
+      });
+    });
+
 
 
   });

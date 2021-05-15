@@ -100,11 +100,24 @@ export default class Contract {
       });
   }
 
-  buyInsurance(flightKey, amount, callback) {
+  buyInsuranceFlightKey(flightKey, amount, callback) {
     const weiAmount = this.weiMultiple * amount;
     let self = this;
     self.flightSuretyApp.methods
       .buyWithKey(flightKey)
+      .send(
+        { from: self.owner, value: weiAmount, gas: 1000000 },
+        (error, result) => {
+          callback(error, result);
+        }
+      );
+  }
+
+  buyInsuranceMetadata(flight, airline, timestamp, amount, callback) {
+    const weiAmount = this.weiMultiple * amount;
+    let self = this;
+    self.flightSuretyApp.methods
+      .buy(airline, flight, timestamp)
       .send(
         { from: self.owner, value: weiAmount, gas: 1000000 },
         (error, result) => {
