@@ -34,13 +34,11 @@ import "./flightsurety.css";
       for (const key of flightKeys) {
         let data = await contract.getFlightData(key);
         let airlineName = await contract.getAirlineName(data.airline);
-        let label = `${airlineName} - ${data.name} - ${data.updatedTimestamp}`;
-        flightData.push({
-          label: label,
-          value: key,
-        });
+        data.airlineName = airlineName;
+        data.key = key;
+        flightData.push(data);
       }
-      display("Registered Flights", "Show registered Flights", flightData);
+      displayFlights(flightData);
     });
 
     // // Show events
@@ -48,12 +46,12 @@ import "./flightsurety.css";
       if (err) console.log(err);
       else {
         console.log(log);
-        var node = document.createElement("LI");                 // Create a <li> node
-        var textnode = document.createTextNode(log.event + " - " + log.transactionHash);         // Create a text node
+        var node = document.createElement("LI"); // Create a <li> node
+        var textnode = document.createTextNode(
+          log.event + " - " + log.transactionHash
+        ); // Create a text node
         node.appendChild(textnode);
-        DOM.elid("app-events").appendChild(
-          node
-        );
+        DOM.elid("app-events").appendChild(node);
       }
     });
 
@@ -61,12 +59,12 @@ import "./flightsurety.css";
       if (err) console.log(err);
       else {
         console.log(log);
-        var node = document.createElement("LI");                 // Create a <li> node
-        var textnode = document.createTextNode(log.event + " - " + log.transactionHash);         // Create a text node
+        var node = document.createElement("LI"); // Create a <li> node
+        var textnode = document.createTextNode(
+          log.event + " - " + log.transactionHash
+        ); // Create a text node
         node.appendChild(textnode);
-        DOM.elid("data-events").appendChild(
-          node
-        );
+        DOM.elid("data-events").appendChild(node);
       }
     });
 
@@ -122,6 +120,30 @@ import "./flightsurety.css";
         }
       );
     });
+    function displayFlights(results) {
+      let title = "Registered Flights";
+      let description = "Flights with insurance available.";
+      let displayDiv = DOM.elid("display-wrapper");
+      let section = DOM.section();
+      section.appendChild(DOM.h2(title));
+      section.appendChild(DOM.h5(description));
+      results.map((result) => {
+        let row = section.appendChild(DOM.div({ className: "row" }));
+        let label = `${result.airlineName} - ${result.name}`;
+        row.appendChild(DOM.div({ className: "col-sm-4 field" }, label));
+        let button = DOM.button("Oracle Request");
+        button.setAttribute("key", result.key);
+        button.addEventListener("click", (event) => {
+          console.log(event.target.getAttribute("key"));
+          contract.fetchFlightStatus(result, (error, result) => {
+            console.log(error,result);
+          });
+        });
+        row.appendChild(button);
+        section.appendChild(row);
+      });
+      displayDiv.append(section);
+    }
   });
 })();
 
