@@ -131,15 +131,43 @@ import "./flightsurety.css";
         let row = section.appendChild(DOM.div({ className: "row" }));
         let label = `${result.airlineName} - ${result.name}`;
         row.appendChild(DOM.div({ className: "col-sm-4 field" }, label));
-        let button = DOM.button("Oracle Request");
-        button.setAttribute("key", result.key);
-        button.addEventListener("click", (event) => {
-          console.log(event.target.getAttribute("key"));
+
+        // Button to trigger oracle request
+        let oracleButton = DOM.button("Oracle Request");
+        oracleButton.addEventListener("click", (event) => {
           contract.fetchFlightStatus(result, (error, result) => {
-            console.log(error,result);
+            console.log(error, result);
           });
         });
-        row.appendChild(button);
+        row.appendChild(oracleButton);
+
+        // Buy insurance form
+        let insuranceForm = DOM.form();
+        let amountInput = DOM.input();
+        amountInput.setAttribute("type", "text");
+        amountInput.setAttribute("placeholder", "Amount [ETH]");
+        insuranceForm.appendChild(amountInput);
+        let buyButton = DOM.button("Buy Insurance");
+        buyButton.setAttribute("type", "submit");
+        insuranceForm.appendChild(buyButton);
+
+        insuranceForm.addEventListener("submit", (event) => {
+          let amount = event.srcElement[0].value;
+          let flightKey = result.key;
+          contract.buyInsuranceFlightKey(flightKey, amount, (error, result) => {
+            display("Insurance", "Bought Insurances", [
+              {
+                label: "Buy Insurance",
+                error: error,
+                value: `flight: ${flightKey}, amount: ${amount}, result: ${result}`,
+              },
+            ]);
+          });
+          event.preventDefault();
+        });
+
+        row.appendChild(insuranceForm);
+
         section.appendChild(row);
       });
       displayDiv.append(section);
