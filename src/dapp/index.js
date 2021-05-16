@@ -84,6 +84,9 @@ import "./flightsurety.css";
         let oracleButton = DOM.button("Oracle Request");
         oracleButton.addEventListener("click", (event) => {
           contract.fetchFlightStatus(result, (error, result) => {
+            if (error) {
+              logError("fetchFlighStatus", error);
+            }
             console.log(error, result);
           });
         });
@@ -102,9 +105,12 @@ import "./flightsurety.css";
         insuranceForm.addEventListener("submit", (event) => {
           let amount = event.srcElement[0].value;
           let flightKey = result.key;
-          contract.buyInsuranceFlightKey(flightKey, amount, (error, result) =>
-            console.log(error, result)
-          );
+          contract.buyInsuranceFlightKey(flightKey, amount, (error, result) => {
+            console.log(error, result);
+            if (error) {
+              logError("buyInsurance", error);
+            }
+          });
           event.preventDefault();
         });
 
@@ -116,6 +122,15 @@ import "./flightsurety.css";
     }
   });
 })();
+
+function logError(transactionType, errorMessage) {
+  var node = document.createElement("LI"); // Create a <li> node
+  var textnode = document.createTextNode(
+    transactionType + " - " + errorMessage
+  ); // Create a text node
+  node.appendChild(textnode);
+  DOM.elid("error-log").appendChild(node);
+}
 
 function display(title, description, results) {
   let displayDiv = DOM.elid("display-wrapper");
