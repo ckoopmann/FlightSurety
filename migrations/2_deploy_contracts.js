@@ -7,8 +7,8 @@ module.exports = function (deployer, network, accounts) {
   let firstAirlineAddress = accounts[0];
   let firstAirlineName = "Testairline2";
   let testFlights = [
-    { flight: "T1", timestamp: 123000 },
-    { flight: "T2", timestamp: 345000 },
+    { flight: "FLIGHT1", timestamp: 123000 },
+    { flight: "FLIGHT2", timestamp: 345000 },
   ];
   const weiMultiple = new BigNumber(10).pow(18);
 
