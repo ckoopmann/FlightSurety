@@ -68,58 +68,6 @@ import "./flightsurety.css";
       }
     });
 
-    // User-submitted transaction
-    DOM.elid("submit-oracle").addEventListener("click", () => {
-      let flight = DOM.elid("flight-number").value;
-      // Write transaction
-      contract.fetchFlightStatus(flight, (error, result) => {
-        display("Oracles", "Trigger oracles", [
-          {
-            label: "Fetch Flight Status",
-            error: error,
-            value: result.flight + " " + result.timestamp,
-          },
-        ]);
-      });
-    });
-
-    DOM.elid("buy-insurance-flightKey").addEventListener("click", () => {
-      let flightKey = DOM.elid("flight-key").value;
-      let amount = parseFloat(DOM.elid("insurance-amount").value);
-      // Write transaction
-      contract.buyInsuranceFlightKey(flightKey, amount, (error, result) => {
-        display("Insurance", "Bought Insurances", [
-          {
-            label: "Buy Insurance",
-            error: error,
-            value: `flight: ${flightKey}, amount: ${amount}, result: ${result}`,
-          },
-        ]);
-      });
-    });
-
-    DOM.elid("buy-insurance-metadata").addEventListener("click", () => {
-      let flight = DOM.elid("flight-name").value;
-      let airline = DOM.elid("flight-airline").value;
-      let timestamp = DOM.elid("flight-timestamp").value;
-      let amount = parseFloat(DOM.elid("insurance-amount-metadata").value);
-      // Write transaction
-      contract.buyInsuranceMetadata(
-        flight,
-        airline,
-        timestamp,
-        amount,
-        (error, result) => {
-          display("Insurance", "Bought Insurances", [
-            {
-              label: "Buy Insurance",
-              error: error,
-              value: `flight: ${flight}, amount: ${amount}, result: ${result}`,
-            },
-          ]);
-        }
-      );
-    });
     function displayFlights(results) {
       let title = "Registered Flights";
       let description = "Flights with insurance available.";
@@ -154,15 +102,9 @@ import "./flightsurety.css";
         insuranceForm.addEventListener("submit", (event) => {
           let amount = event.srcElement[0].value;
           let flightKey = result.key;
-          contract.buyInsuranceFlightKey(flightKey, amount, (error, result) => {
-            display("Insurance", "Bought Insurances", [
-              {
-                label: "Buy Insurance",
-                error: error,
-                value: `flight: ${flightKey}, amount: ${amount}, result: ${result}`,
-              },
-            ]);
-          });
+          contract.buyInsuranceFlightKey(flightKey, amount, (error, result) =>
+            console.log(error, result)
+          );
           event.preventDefault();
         });
 
